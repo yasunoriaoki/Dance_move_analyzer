@@ -1,5 +1,5 @@
 streamlit
-opencv-python-headless
+opencv-contrib-python-headless==4.12.0.88
 mediapipe==0.10.14
 numpy
 imageio-ffmpeg
