@@ -15,6 +15,22 @@ import streamlit as st
 import UpperBody_LiveOverlay as ubo
 
 
+def _get_mp_pose():
+    try:
+        return mp.solutions.pose
+    except AttributeError as exc:
+        try:
+            from mediapipe.python.solutions import pose as pose_mod
+        except Exception as import_exc:
+            raise AttributeError(
+                "mediapipe is missing solutions.pose; verify the mediapipe install."
+            ) from import_exc
+        return pose_mod
+
+
+mp_pose = _get_mp_pose()
+
+
 APP_TITLE = "Dance Practice Overlay"
 OUTPUT_DIR = ".streamlit_outputs"
 
@@ -112,10 +128,10 @@ def draw_pose_overlay(
             cv2.circle(image_bgr, (x, y), point_radius, (0, 0, 255), -1)
 
     if show_guides:
-        left_shoulder = mp.solutions.pose.PoseLandmark.LEFT_SHOULDER.value
-        right_shoulder = mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER.value
-        left_hip = mp.solutions.pose.PoseLandmark.LEFT_HIP.value
-        right_hip = mp.solutions.pose.PoseLandmark.RIGHT_HIP.value
+        left_shoulder = mp_pose.PoseLandmark.LEFT_SHOULDER.value
+        right_shoulder = mp_pose.PoseLandmark.RIGHT_SHOULDER.value
+        left_hip = mp_pose.PoseLandmark.LEFT_HIP.value
+        right_hip = mp_pose.PoseLandmark.RIGHT_HIP.value
 
         mid_shoulder = _midpoint(landmarks, left_shoulder, right_shoulder, w, h)
         mid_hip = _midpoint(landmarks, left_hip, right_hip, w, h)
@@ -125,8 +141,8 @@ def draw_pose_overlay(
         cv2.line(image_bgr, (0, y_hip), (w - 1, y_hip), (0, 255, 255), 2)
 
     if show_wrist_guides:
-        left_wrist = mp.solutions.pose.PoseLandmark.LEFT_WRIST.value
-        right_wrist = mp.solutions.pose.PoseLandmark.RIGHT_WRIST.value
+        left_wrist = mp_pose.PoseLandmark.LEFT_WRIST.value
+        right_wrist = mp_pose.PoseLandmark.RIGHT_WRIST.value
         lw = landmarks[left_wrist]
         rw = landmarks[right_wrist]
         if (
@@ -180,7 +196,6 @@ def render_pose_segment(
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(out_path, fourcc, fps, (w, h))
 
-    mp_pose = mp.solutions.pose
     pose_connections = mp_pose.POSE_CONNECTIONS
     shoulder_trace = deque(maxlen=trace_length)
     hip_trace = deque(maxlen=trace_length)

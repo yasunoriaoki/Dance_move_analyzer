@@ -8,6 +8,19 @@ from collections import deque
 import argparse
 
 
+def _get_mp_pose():
+    try:
+        return mp.solutions.pose
+    except AttributeError as exc:
+        try:
+            from mediapipe.python.solutions import pose as pose_mod
+        except Exception as import_exc:
+            raise AttributeError(
+                "mediapipe is missing solutions.pose; verify the mediapipe install."
+            ) from import_exc
+        return pose_mod
+
+
 
 def get_point(pl, lm, w, h):
     p = pl.landmark[lm]
@@ -218,7 +231,7 @@ def weightCenterLectangle(point_a,point_b,point_c,point_d): # be careful as it i
 
 
 
-mp_pose = mp.solutions.pose
+mp_pose = _get_mp_pose()
 
 INCLUDE_PARTS = [
     mp_pose.PoseLandmark.RIGHT_SHOULDER,
