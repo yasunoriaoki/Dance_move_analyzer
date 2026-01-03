@@ -3,10 +3,12 @@ import mediapipe as mp
 import numpy as np
 import math
 import os
+import shutil
 import subprocess
 from collections import deque
 import argparse
 
+import imageio_ffmpeg
 
 def _get_mp_pose():
     try:
@@ -232,6 +234,16 @@ def weightCenterLectangle(point_a,point_b,point_c,point_d): # be careful as it i
 
 
 mp_pose = _get_mp_pose()
+
+
+def _get_ffmpeg_path():
+    local = shutil.which("ffmpeg")
+    if local:
+        return local
+    try:
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return None
 
 INCLUDE_PARTS = [
     mp_pose.PoseLandmark.RIGHT_SHOULDER,
@@ -592,32 +604,34 @@ def render_pose_on_video(in_path, out_path, max_frames=None):
     out.release()
     print("Wrote:", out_path)
 
-    temp_out = out_path + ".with_audio.mp4"
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-y",
-            "-i",
-            out_path,
-            "-i",
-            in_path,
-            "-c:v",
-            "copy",
-            "-c:a",
-            "aac",
-            "-map",
-            "0:v:0",
-            "-map",
-            "1:a:0",
-            temp_out,
-        ],
-        check=False,
-    )
-    try:
-        if os.path.exists(temp_out):
-            os.replace(temp_out, out_path)
-    except OSError:
-        pass
+    ffmpeg_path = _get_ffmpeg_path()
+    if ffmpeg_path:
+        temp_out = out_path + ".with_audio.mp4"
+        subprocess.run(
+            [
+                ffmpeg_path,
+                "-y",
+                "-i",
+                out_path,
+                "-i",
+                in_path,
+                "-c:v",
+                "copy",
+                "-c:a",
+                "aac",
+                "-map",
+                "0:v:0",
+                "-map",
+                "1:a:0",
+                temp_out,
+            ],
+            check=False,
+        )
+        try:
+            if os.path.exists(temp_out):
+                os.replace(temp_out, out_path)
+        except OSError:
+            pass
 
 
 def render_pose_on_webcam(camera_index=0):

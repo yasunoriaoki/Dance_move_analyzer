@@ -8,6 +8,7 @@ import tempfile
 from collections import deque
 
 import cv2
+import imageio_ffmpeg
 import mediapipe as mp
 import numpy as np
 import streamlit as st
@@ -29,6 +30,16 @@ def _get_mp_pose():
 
 
 mp_pose = _get_mp_pose()
+
+
+def _get_ffmpeg_path():
+    local = shutil.which("ffmpeg")
+    if local:
+        return local
+    try:
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return None
 
 
 APP_TITLE = "Dance Practice Overlay"
@@ -389,11 +400,12 @@ def render_upperbody_segment(
 
 
 def merge_audio_segment(video_path, source_path, start_sec, end_sec):
-    if not shutil.which("ffmpeg"):
+    ffmpeg_path = _get_ffmpeg_path()
+    if not ffmpeg_path:
         return False
     tmp_out = video_path + ".with_audio.mp4"
     cmd = [
-        "ffmpeg",
+        ffmpeg_path,
         "-y",
         "-i",
         video_path,
