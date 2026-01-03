@@ -509,7 +509,6 @@ def main():
             show_points = st.checkbox("Show joints points", value=True)
         else:
             show_guide_lines = st.checkbox("Show guide lines", value=True)
-            show_side_schematic = st.checkbox("Show side schematic", value=False)
     with col2:
         if overlay_mode == "Simple skeleton":
             show_guides = st.checkbox("Show shoulder/hip guides", value=True)
